@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SobatRisan – Kelola Arisan Digital via WhatsApp</title>
+  <meta name="description" content="SobatRisan – Platform digitalisasi arisan RT & keluarga via WhatsApp. Tanpa instal aplikasi. Pengingat otomatis, rekap keuangan, dan undian transparan." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --wa-green: #25D366;
+      --wa-dark: #075E54;
+      --wa-teal: #128C7E;
+      --wa-light-green: #DCF8C6;
+      --wa-blue-tick: #53BDEB;
+      --wa-bg: #E5DDD5;
+      --wa-chat-bg: #ECE5DD;
+      --wa-header: #075E54;
+      --accent: #25D366;
+      --accent-dark: #128C7E;
+      --accent-light: #dcfce7;
+      --text-dark: #0f172a;
+      --text-mid: #334155;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.15);
+      --shadow-xl: 0 24px 64px rgba(0,0,0,.18);
+      --transition: .28s cubic-bezier(.4,0,.2,1);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0f1e;
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== PROTOTYPE SHELL ===== */
+    .prototype-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== STEP NAVIGATOR (TOP) ===== */
+    .step-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(10, 15, 30, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(37,211,102,.18);
+      padding: 10px 16px;
+    }
+    .step-nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .brand-logo .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .brand-logo .logo-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #25D366;
+      letter-spacing: -.3px;
+    }
+    .steps-track {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .steps-track::-webkit-scrollbar { display: none; }
+    .step-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1.5px solid rgba(255,255,255,.12);
+      background: transparent;
+      color: rgba(255,255,255,.45);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+    }
+    .step-pill:hover { border-color: rgba(37,211,102,.4); color: rgba(255,255,255,.75); }
+    .step-pill.active {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      border-color: transparent;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(37,211,102,.35);
+    }
+    .step-pill.completed {
+      border-color: rgba(37,211,102,.4);
+      color: #25D366;
+    }
+    .step-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-pill.active .step-num { background: rgba(255,255,255,.25); }
+    .step-pill.completed .step-num { background: #25D366; color: #fff; font-size: 9px; }
+    .step-connector { width: 16px; height: 1px; background: rgba(255,255,255,.12); flex-shrink: 0; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      margin-top: 68px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 100px;
+    }
+
+    /* ===== SCREEN ===== */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      animation: screenIn .4s cubic-bezier(.4,0,.2,1) both;
+    }
+    .screen.active { display: block; }
+    @keyframes screenIn {
+      from { opacity: 0; transform: translateY(20px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ===== BOTTOM NAV BAR ===== */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(10,15,30,.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(37,211,102,.15);
+      padding: 12px 20px 16px;
+    }
+    .bottom-bar-inner {
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-prev, .btn-next {
+      flex: 1;
+      padding: 13px 20px;
+      border-radius: 14px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-prev {
+      background: rgba(255,255,255,.07);
+      color: rgba(255,255,255,.65);
+      border: 1.5px solid rgba(255,255,255,.1);
+    }
+    .btn-prev:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .btn-next {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(37,211,102,.4);
+    }
+    .btn-next:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(37,211,102,.5); }
+    .btn-next:active { transform: translateY(0); }
+    .step-counter {
+      font-size: 11px;
+      color: rgba(255,255,255,.4);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    /* ===== SCREEN LABEL ===== */
+    .screen-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37,211,102,.12);
+      border: 1px solid rgba(37,211,102,.25);
+      color: #25D366;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+
+    /* ===================================================================
+       LAYAR 1: LANDING PAGE
+    =================================================================== */
+    #screen-1 { max-width: 420px; }
+
+    .landing-phone {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+
+    /* Status bar */
+    .phone-statusbar {
+      background: #075E54;
+      padding: 8px 20px 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .phone-statusbar span { font-size: 11px; color: rgba(255,255,255,.85); font-weight: 600; }
+
+    /* Hero */
+    .landing-hero {
+      background: linear-gradient(160deg, #075E54 0%, #128C7E 55%, #25D366 100%);
+      padding: 36px 24px 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .landing-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .landing-hero .hero-emoji {
+      font-size: 52px;
+      display: block;
+      margin-bottom: 14px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      backdrop-filter: blur(8px);
+    }
+    .hero-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      letter-spacing: -.5px;
+      position: relative;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,.8);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #fff;
+      color: #128C7E;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      font-family: 'Inter', sans-serif;
+      position: relative;
+    }
+    .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,.3); }
+    .hero-cta .wa-icon { font-size: 20px; }
+
+    /* Features */
+    .landing-features {
+      background: #fff;
+      padding: 20px;
+    }
+    .features-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 14px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .feature-item:last-child { border-bottom: none; }
+    .feature-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .feature-icon.green { background: #dcfce7; }
+    .feature-icon.blue { background: #dbeafe; }
+    .feature-icon.purple { background: #f3e8ff; }
+    .feature-text h4 { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+    .feature-text p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Social proof */
+    .landing-proof {
+      background: var(--surface-2);
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .proof-avatars { display: flex; }
+    .proof-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      border: 2px solid #fff;
+      margin-right: -8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+    }
+    .proof-text { font-size: 11px; color: var(--text-muted); }
+    .proof-text strong { color: var(--text-dark); font-weight: 700; }
+
+    /* ===================================================================
+       LAYAR 2: WHATSAPP CHAT (BENDAHARA - BUAT KELOMPOK)
+    =================================================================== */
+    .wa-phone {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .wa-statusbar {
+      background: #075E54;
+      padding: 8px 20px 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .wa-statusbar span { font-size: 11px; color: rgba(255,255,255,.85); font-weight: 600; }
+
+    .wa-header {
+      background: #075E54;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .wa-back { font-size: 18px; color: #fff; cursor: pointer; }
+    .wa-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .wa-contact-info { flex: 1; }
+    .wa-contact-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .wa-contact-status { font-size: 11px; color: rgba(255,255,255,.7); }
+    .wa-actions { display: flex; gap: 12px; }
+    .wa-action-icon { font-size: 18px; color: rgba(255,255,255,.85); }
+
+    .wa-chat-area {
+      background: var(--wa-chat-bg);
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b0a99a' fill-opacity='0.07'%3E%3Cpath d='M50 10 L55 30 L75 30 L60 42 L65 62 L50 50 L35 62 L40 42 L25 30 L45 30Z'/%3E%3C/g%3E%3C/svg%3E");
+      min-height: 380px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      scroll-behavior: smooth;
+    }
+    .wa-chat-area::-webkit-scrollbar { width: 4px; }
+    .wa-chat-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 4px; }
+
+    .wa-date-divider {
+      text-align: center;
+      margin: 8px 0;
+    }
+    .wa-date-divider span {
+      background: rgba(255,255,255,.75);
+      font-size: 11px;
+      color: #667781;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .msg { display: flex; flex-direction: column; max-width: 80%; }
+    .msg.bot { align-self: flex-start; }
+    .msg.user { align-self: flex-end; }
+
+    .msg-bubble {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      position: relative;
+    }
+    .msg.bot .msg-bubble {
+      background: #fff;
+      border-radius: 0 8px 8px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+      color: #111b21;
+    }
+    .msg.user .msg-bubble {
+      background: var(--wa-light-green);
+      border-radius: 8px 0 8px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+      color: #111b21;
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: #667781;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .msg.user .msg-time { justify-content: flex-end; }
+    .tick { color: var(--wa-blue-tick); font-size: 12px; }
+
+    .msg-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #25D366;
+      margin-bottom: 2px;
+    }
+
+    .bot-typing {
+      display: none;
+      align-self: flex-start;
+    }
+    .bot-typing.show { display: flex; }
+    .typing-bubble {
+      background: #fff;
+      border-radius: 0 8px 8px 8px;
+      padding: 10px 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+      display: flex; gap: 4px; align-items: center;
+    }
+    .typing-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #667781;
+      animation: typingBounce 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .2s; }
+    .typing-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes typingBounce {
+      0%,60%,100% { transform: translateY(0); opacity: .4; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    .wa-input-bar {
+      background: #f0f2f5;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wa-input-box {
+      flex: 1;
+      background: #fff;
+      border: none;
+      border-radius: 24px;
+      padding: 10px 16px;
+      font-size: 14px;
+      color: var(--text-dark);
+      outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .wa-send-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: #25D366;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      color: #fff;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .wa-send-btn:hover { background: #128C7E; transform: scale(1.05); }
+
+    /* Interactive quick-reply chips */
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 0 2px;
+    }
+    .qr-chip {
+      background: #fff;
+      border: 1.5px solid #25D366;
+      color: #128C7E;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+    }
+    .qr-chip:hover { background: #25D366; color: #fff; }
+
+    .wa-link-card {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e9edef;
+      margin-top: 4px;
+    }
+    .wa-link-card-top {
+      background: linear-gradient(135deg, #075E54, #128C7E);
+      padding: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .wa-link-card-icon { font-size: 24px; }
+    .wa-link-card-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .wa-link-card-subtitle { font-size: 11px; color: rgba(255,255,255,.75); }
+    .wa-link-card-url {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #53BDEB;
+      font-weight: 500;
+    }
+
+    /* ===================================================================
+       LAYAR 3: CHAT ANGGOTA
+    =================================================================== */
+    .wa-notification-banner {
+      background: linear-gradient(135deg, #FFF3CD, #FFEAA7);
+      border-left: 4px solid #F0A500;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #7D5A00;
+      font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .photo-bubble {
+      background: #fff;
+      border-radius: 0 8px 8px 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,.12);
+      max-width: 180px;
+    }
+    .photo-bubble-img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(145deg, #dcfce7, #bbf7d0);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .photo-bubble-img:hover { opacity: .9; }
+    .photo-bubble-img .receipt-icon { font-size: 32px; }
+    .photo-bubble-img .receipt-label { font-size: 11px; color: #166534; font-weight: 600; }
+    .photo-bubble-caption {
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #111b21;
+    }
+
+    .upload-trigger-btn {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .upload-trigger-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,.4); }
+
+    /* ===================================================================
+       LAYAR 4: DASHBOARD
+    =================================================================== */
+    #screen-4 { max-width: 440px; }
+    .dashboard-shell {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
+    }
+    .dash-topbar {
+      background: linear-gradient(135deg, #075E54, #128C7E);
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dash-topbar-left { display: flex; align-items: center; gap: 10px; }
+    .dash-topbar-logo { font-size: 20px; }
+    .dash-topbar-info h3 { font-size: 14px; font-weight: 700; color: #fff; }
+    .dash-topbar-info p { font-size: 11px; color: rgba(255,255,255,.7); }
+    .dash-topbar-link {
+      font-size: 11px;
+      color: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.12);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+
+    .dash-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+    .dash-stat {
+      background: var(--surface-2);
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .dash-stat-val { font-size: 20px; font-weight: 800; color: var(--text-dark); }
+    .dash-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+    .dash-section {
+      padding: 16px 20px;
+    }
+    .dash-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dash-section-title .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #F59E0B;
+    }
+    .dash-section-title .dot.green { background: #25D366; }
+
+    .member-card {
+      background: var(--surface-2);
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: var(--transition);
+    }
+    .member-card:hover { border-color: rgba(37,211,102,.3); box-shadow: var(--shadow-sm); }
+    .member-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .member-info { flex: 1; }
+    .member-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    .member-amount { font-size: 11px; color: var(--text-muted); }
+    .member-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .status-waiting {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+    .status-confirmed {
+      background: #D1FAE5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+    }
+    .status-late {
+      background: #FEE2E2;
+      color: #991B1B;
+      border: 1px solid #FECACA;
+    }
+    .member-actions { display: flex; gap: 6px; align-items: center; }
+    .btn-cek {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1.5px solid #53BDEB;
+      color: #53BDEB;
+      background: transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-cek:hover { background: #53BDEB; color: #fff; }
+    .btn-lunas {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #fff;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .btn-lunas:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,211,102,.4); }
+    .btn-lunas:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ===================================================================
+       LAYAR 5: GROUP CHAT + UNDIAN
+    =================================================================== */
+    .wa-group-header {
+      background: #075E54;
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .group-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FCD34D, #F59E0B);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .undian-container {
+      background: linear-gradient(145deg, #0a1628, #0d2137);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      border: 1px solid rgba(37,211,102,.2);
+      margin: 12px;
+      display: none;
+    }
+    .undian-container.show { display: block; animation: screenIn .4s both; }
+    .undian-title { font-size: 14px; font-weight: 700; color: rgba(255,255,255,.85); margin-bottom: 16px; }
+    .undian-wheel {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #25D366 0% 20%, #128C7E 20% 35%,
+        #34D399 35% 55%, #059669 55% 70%,
+        #10B981 70% 85%, #065F46 85% 100%
+      );
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 32px rgba(37,211,102,.4);
+      position: relative;
+    }
+    .undian-wheel.spinning { animation: spin 0.1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .wheel-center {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: #0a1628;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      border: 3px solid rgba(255,255,255,.1);
+    }
+    .countdown-display {
+      font-size: 48px;
+      font-weight: 900;
+      color: #25D366;
+      text-shadow: 0 0 24px rgba(37,211,102,.6);
+      display: none;
+    }
+    .undian-status {
+      font-size: 13px;
+      color: rgba(255,255,255,.65);
+      margin-top: 10px;
+    }
+    .winner-announcement {
+      display: none;
+      animation: winnerAppear .6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .winner-announcement.show { display: block; }
+    @keyframes winnerAppear {
+      from { opacity:0; transform: scale(.5); }
+      to   { opacity:1; transform: scale(1); }
+    }
+    .winner-trophy { font-size: 48px; display: block; margin-bottom: 8px; }
+    .winner-name { font-size: 22px; font-weight: 900; color: #FCD34D; margin-bottom: 4px; }
+    .winner-label { font-size: 12px; color: rgba(255,255,255,.65); }
+    .winner-hash {
+      font-size: 10px;
+      color: rgba(37,211,102,.6);
+      margin-top: 10px;
+      word-break: break-all;
+      font-family: monospace;
+    }
+
+    .undian-btn {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+      margin-top: 12px;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .undian-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,.5); }
+
+    .history-block {
+      background: rgba(37,211,102,.08);
+      border: 1px solid rgba(37,211,102,.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 0 12px 12px;
+      display: none;
+    }
+    .history-block.show { display: block; animation: screenIn .4s both; }
+    .history-title { font-size: 11px; font-weight: 700; color: #25D366; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .history-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(37,211,102,.12); }
+    .history-row:last-child { border-bottom: none; }
+    .history-num { font-size: 10px; font-weight: 700; color: #25D366; width: 20px; }
+    .history-data { font-size: 11px; color: rgba(255,255,255,.75); flex: 1; }
+    .history-hash { font-size: 9px; color: rgba(255,255,255,.35); font-family: monospace; }
+
+    /* ===== POPUP NOTIFICATION ===== */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .popup-overlay.show { display: flex; animation: fadeIn .25s both; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .popup-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+      box-shadow: var(--shadow-xl);
+      animation: popIn .35s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform: scale(.7); }
+      to   { opacity:1; transform: scale(1); }
+    }
+    .popup-icon { font-size: 52px; display: block; margin-bottom: 12px; }
+    .popup-title { font-size: 18px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+    .popup-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+    .popup-wa-msg {
+      background: var(--wa-chat-bg);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .popup-wa-bubble {
+      background: var(--wa-light-green);
+      border-radius: 0 8px 8px 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #111b21;
+      line-height: 1.6;
+      display: inline-block;
+      max-width: 85%;
+    }
+    .popup-close {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+      transition: var(--transition);
+    }
+    .popup-close:hover { transform: translateY(-1px); }
+
+    /* ===== PROOF IMAGE POPUP ===== */
+    .proof-popup {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 300px;
+      width: 100%;
+      box-shadow: var(--shadow-xl);
+      animation: popIn .35s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .proof-popup-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; text-align: center; }
+    .proof-img-mock {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(145deg, #dcfce7, #bbf7d0);
+      border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .proof-img-mock .mock-icon { font-size: 36px; }
+    .proof-detail { font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+    .proof-detail strong { color: var(--text-dark); display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+
+    /* ===== WA MESSAGE BADGE ===== */
+    .wa-msg-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37,211,102,.12);
+      border: 1px solid rgba(37,211,102,.3);
+      color: #25D366;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* ===== CONFETTI ===== */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+      pointer-events: none;
+      z-index: 3000;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .step-pill .step-label { display: none; }
+      .step-pill { padding: 6px 10px; }
+      .hero-title { font-size: 19px; }
+    }
+    @media (min-width: 768px) {
+      .main-content { padding: 32px 24px 100px; }
+      .screen { max-width: 480px; }
+      #screen-4 { max-width: 500px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== STEP NAVIGATOR ===== -->
+<nav class="step-nav" role="navigation" aria-label="Step navigator">
+  <div class="step-nav-inner">
+    <div class="brand-logo">
+      <div class="logo-icon">💚</div>
+      <span class="logo-text">SobatRisan</span>
+    </div>
+    <div class="steps-track" id="stepsTrack">
+      <button class="step-pill active" data-step="1" onclick="goToStep(1)" id="pill-1">
+        <span class="step-num">1</span>
+        <span class="step-label">Landing</span>
+      </button>
+      <div class="step-connector"></div>
+      <button class="step-pill" data-step="2" onclick="goToStep(2)" id="pill-2">
+        <span class="step-num">2</span>
+        <span class="step-label">Buat Kelompok</span>
+      </button>
+      <div class="step-connector"></div>
+      <button class="step-pill" data-step="3" onclick="goToStep(3)" id="pill-3">
+        <span class="step-num">3</span>
+        <span class="step-label">Bayar &amp; Upload</span>
+      </button>
+      <div class="step-connector"></div>
+      <button class="step-pill" data-step="4" onclick="goToStep(4)" id="pill-4">
+        <span class="step-num">4</span>
+        <span class="step-label">Dashboard</span>
+      </button>
+      <div class="step-connector"></div>
+      <button class="step-pill" data-step="5" onclick="goToStep(5)" id="pill-5">
+        <span class="step-num">5</span>
+        <span class="step-label">Undian</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+  <!-- =====================================================
+       LAYAR 1: LANDING PAGE
+  ===================================================== -->
+  <section class="screen active" id="screen-1" aria-label="Landing Page SobatRisan">
+    <div class="screen-label">🏠 Layar 1 · Landing Page</div>
+    <div class="landing-phone">
+      <!-- Status bar -->
+      <div class="phone-statusbar">
+        <span>15:04</span>
+        <span>📶 🔋</span>
+      </div>
+      <!-- Hero -->
+      <div class="landing-hero">
+        <span class="hero-emoji" role="img" aria-label="Uang dan WhatsApp">💰</span>
+        <div class="hero-badge">✨ Tanpa Instal Aplikasi</div>
+        <h1 class="hero-title">Kelola Arisan RT &amp; Keluarga Tanpa Pusing, Beres Otomatis via WhatsApp.</h1>
+        <p class="hero-subtitle">Pengingat otomatis, rekap keuangan transparan, dan undian fair — semua lewat chatbot WhatsApp yang sudah kamu kenal.</p>
+        <button class="hero-cta" id="btn-cta-landing" onclick="goToStep(2)" aria-label="Mulai Chat Bot Simulasi">
+          <span class="wa-icon" role="img" aria-hidden="true">💬</span>
+          Mulai Chat Bot (Simulasi)
+        </button>
+      </div>
+      <!-- Features -->
+      <div class="landing-features">
+        <div class="features-title">Kenapa SobatRisan?</div>
+        <div class="feature-item">
+          <div class="feature-icon green">🔔</div>
+          <div class="feature-text">
+            <h4>Pengingat Otomatis</h4>
+            <p>Bot WA kirim notifikasi H-1 & H-0 jatuh tempo iuran ke tiap anggota.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon blue">📊</div>
+          <div class="feature-text">
+            <h4>Rekap Keuangan Real-Time</h4>
+            <p>Dashboard web bendahara update otomatis setiap ada pembayaran masuk.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon purple">🎯</div>
+          <div class="feature-text">
+            <h4>Undian Transparan</h4>
+            <p>Sistem kocok arisan acak &amp; terverifikasi, riwayatnya tidak bisa dimanipulasi.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Social proof -->
+      <div class="landing-proof">
+        <div class="proof-avatars">
+          <div class="proof-avatar">S</div>
+          <div class="proof-avatar">R</div>
+          <div class="proof-avatar">A</div>
+          <div class="proof-avatar">+</div>
+        </div>
+        <div class="proof-text"><strong>+2.400 bendahara</strong> sudah percaya SobatRisan ⭐ 4.9/5</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       LAYAR 2: CHAT BENDAHARA - BUAT KELOMPOK
+  ===================================================== -->
+  <section class="screen" id="screen-2" aria-label="Simulasi Chat Bendahara">
+    <div class="screen-label">💬 Layar 2 · Bendahara – Buat Kelompok</div>
+    <div class="wa-phone">
+      <div class="wa-statusbar">
+        <span>15:05</span>
+        <span>📶 🔋</span>
+      </div>
+      <div class="wa-header">
+        <span class="wa-back">←</span>
+        <div class="wa-avatar">🤖</div>
+        <div class="wa-contact-info">
+          <div class="wa-contact-name">SobatRisan Bot</div>
+          <div class="wa-contact-status">🟢 Online – Siap membantu</div>
+        </div>
+        <div class="wa-actions">
+          <span class="wa-action-icon">📞</span>
+          <span class="wa-action-icon">⋮</span>
+        </div>
+      </div>
+      <div class="wa-chat-area" id="chat2">
+        <div class="wa-date-divider"><span>Hari ini, 10 Nov 2026</span></div>
+        <!-- Messages will be injected by JS -->
+      </div>
+      <div class="wa-input-bar">
+        <span style="font-size:22px;cursor:pointer;">😊</span>
+        <input class="wa-input-box" type="text" id="input2" placeholder="Ketik pesan..." readonly />
+        <button class="wa-send-btn" id="send2" onclick="screen2Next()" aria-label="Kirim pesan">➤</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       LAYAR 3: CHAT ANGGOTA - BAYAR & UPLOAD
+  ===================================================== -->
+  <section class="screen" id="screen-3" aria-label="Simulasi Chat Anggota">
+    <div class="screen-label">📱 Layar 3 · Anggota – Bayar &amp; Upload</div>
+    <div class="wa-phone">
+      <div class="wa-statusbar">
+        <span>15:12</span>
+        <span>📶 🔋</span>
+      </div>
+      <div class="wa-header">
+        <span class="wa-back">←</span>
+        <div class="wa-avatar">🤖</div>
+        <div class="wa-contact-info">
+          <div class="wa-contact-name">SobatRisan Bot</div>
+          <div class="wa-contact-status">🟢 Online – Siap membantu</div>
+        </div>
+        <div class="wa-actions">
+          <span class="wa-action-icon">📞</span>
+          <span class="wa-action-icon">⋮</span>
+        </div>
+      </div>
+      <div class="wa-notification-banner">
+        ⚡ <strong>Percepat simulasi</strong> — lihat bagaimana anggota berinteraksi dengan bot WA
+      </div>
+      <div class="wa-chat-area" id="chat3">
+        <div class="wa-date-divider"><span>Hari ini, 10 Nov 2026</span></div>
+      </div>
+      <div class="wa-input-bar" id="inputBar3">
+        <span style="font-size:22px;cursor:pointer;">😊</span>
+        <input class="wa-input-box" type="text" id="input3" placeholder="Ketik pesan..." readonly />
+        <button class="wa-send-btn" id="send3" onclick="screen3Next()" aria-label="Kirim pesan">➤</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       LAYAR 4: DASHBOARD BENDAHARA
+  ===================================================== -->
+  <section class="screen" id="screen-4" aria-label="Dashboard Bendahara">
+    <div class="screen-label">🖥️ Layar 4 · Dashboard Bendahara</div>
+    <div class="dashboard-shell">
+      <!-- Top bar -->
+      <div class="dash-topbar">
+        <div class="dash-topbar-left">
+          <div class="dash-topbar-logo">📋</div>
+          <div class="dash-topbar-info">
+            <h3>Arisan RT 03 – Nov 2026</h3>
+            <p>Dashboard Bendahara · Tanpa Password</p>
+          </div>
+        </div>
+        <div class="dash-topbar-link">🔗 Link Unik</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat-val" id="statLunas">3</div>
+          <div class="dash-stat-label">Sudah Lunas</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-val" id="statMenunggu">2</div>
+          <div class="dash-stat-label">Menunggu Konfirmasi</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-val" id="statBelum">1</div>
+          <div class="dash-stat-label">Belum Bayar</div>
+        </div>
+      </div>
+
+      <!-- Member list - Pending -->
+      <div class="dash-section">
+        <div class="dash-section-title"><div class="dot"></div> Menunggu Konfirmasi</div>
+
+        <!-- Bu Sari -->
+        <div class="member-card" id="card-sari">
+          <div class="member-avatar">S</div>
+          <div class="member-info">
+            <div class="member-name">Bu Sari Rahayu</div>
+            <div class="member-amount">Rp 300.000 · 10 Nov 2026</div>
+          </div>
+          <div class="member-actions" id="actions-sari">
+            <button class="btn-cek" onclick="showProofPopup('Bu Sari Rahayu')" aria-label="Cek bukti transfer Bu Sari">Cek Bukti</button>
+            <button class="btn-lunas" id="btn-lunas-sari" onclick="confirmLunas('sari', 'Bu Sari Rahayu')" aria-label="Konfirmasi lunas Bu Sari">Lunas ✓</button>
+          </div>
+        </div>
+
+        <!-- Pak Budi -->
+        <div class="member-card" id="card-budi">
+          <div class="member-avatar">B</div>
+          <div class="member-info">
+            <div class="member-name">Pak Budi Santoso</div>
+            <div class="member-amount">Rp 300.000 · 10 Nov 2026</div>
+          </div>
+          <div class="member-actions" id="actions-budi">
+            <button class="btn-cek" onclick="showProofPopup('Pak Budi Santoso')" aria-label="Cek bukti transfer Pak Budi">Cek Bukti</button>
+            <button class="btn-lunas" id="btn-lunas-budi" onclick="confirmLunas('budi', 'Pak Budi Santoso')" aria-label="Konfirmasi lunas Pak Budi">Lunas ✓</button>
+          </div>
+        </div>
+
+        <div class="dash-section-title" style="margin-top:16px;"><div class="dot green"></div> Sudah Lunas</div>
+
+        <!-- Confirmed members -->
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#34D399,#059669);">R</div>
+          <div class="member-info">
+            <div class="member-name">Bu Rini Susanti</div>
+            <div class="member-amount">Rp 300.000 · 9 Nov 2026</div>
+          </div>
+          <span class="member-status status-confirmed">✅ Lunas</span>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#34D399,#059669);">A</div>
+          <div class="member-info">
+            <div class="member-name">Bu Ani Kartika</div>
+            <div class="member-amount">Rp 300.000 · 8 Nov 2026</div>
+          </div>
+          <span class="member-status status-confirmed">✅ Lunas</span>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#34D399,#059669);">D</div>
+          <div class="member-info">
+            <div class="member-name">Bu Dewi Puspita</div>
+            <div class="member-amount">Rp 300.000 · 7 Nov 2026</div>
+          </div>
+          <span class="member-status status-confirmed">✅ Lunas</span>
+        </div>
+
+        <div class="dash-section-title" style="margin-top:16px;"><div class="dot" style="background:#ef4444;"></div> Belum Bayar</div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#F87171,#EF4444);">T</div>
+          <div class="member-info">
+            <div class="member-name">Pak Tono Wibowo</div>
+            <div class="member-amount">Rp 300.000 · Belum ada bukti</div>
+          </div>
+          <span class="member-status status-late">⏰ Terlambat</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       LAYAR 5: GRUP CHAT + UNDIAN
+  ===================================================== -->
+  <section class="screen" id="screen-5" aria-label="Simulasi Undian Arisan">
+    <div class="screen-label">🎰 Layar 5 · Undian Transparan</div>
+    <div class="wa-phone">
+      <div class="wa-statusbar">
+        <span>15:30</span>
+        <span>📶 🔋</span>
+      </div>
+      <div class="wa-group-header">
+        <span class="wa-back">←</span>
+        <div class="group-avatar">🏘️</div>
+        <div class="wa-contact-info">
+          <div class="wa-contact-name">Arisan RT 03 🏡</div>
+          <div class="wa-contact-status">6 anggota · 🟢 2 online</div>
+        </div>
+        <div class="wa-actions">
+          <span class="wa-action-icon">📞</span>
+          <span class="wa-action-icon">⋮</span>
+        </div>
+      </div>
+      <div class="wa-chat-area" id="chat5" style="max-height:280px;">
+        <div class="wa-date-divider"><span>Hari ini, 10 Nov 2026</span></div>
+
+        <div class="msg bot">
+          <div class="msg-name">SobatRisan Bot 🤖</div>
+          <div class="msg-bubble">
+            📢 <strong>Rekap Pembayaran Bulan ini:</strong><br/>
+            ✅ Bu Rini, Bu Ani, Bu Dewi, Bu Sari, Pak Budi<br/>
+            ⏰ Pak Tono (belum bayar)<br/><br/>
+            Total terkumpul: <strong>Rp 1.500.000</strong> dari 6 anggota.
+          </div>
+          <div class="msg-time">15:28</div>
+        </div>
+
+        <div class="msg user">
+          <div class="msg-name" style="text-align:right; color:#128C7E;">Bu Ketua (Bendahara)</div>
+          <div class="msg-bubble">Oke, semua sudah siap. Yuk kita kocok sekarang! 🎉</div>
+          <div class="msg-time">15:29 <span class="tick">✓✓</span></div>
+        </div>
+
+        <div class="msg bot" id="kocoPrompt">
+          <div class="msg-name">SobatRisan Bot 🤖</div>
+          <div class="msg-bubble">
+            Siap Bu Ketua! Ketik perintah <strong style="color:#25D366;">/kocokarisan</strong> untuk memulai undian transparan. Semua anggota akan melihat hasilnya secara langsung! 🎲
+          </div>
+          <div class="msg-time">15:29</div>
+        </div>
+
+        <div class="msg user" id="kocoCmd" style="display:none;">
+          <div class="msg-name" style="text-align:right; color:#128C7E;">Bu Ketua (Bendahara)</div>
+          <div class="msg-bubble">/kocokarisan</div>
+          <div class="msg-time">15:30 <span class="tick">✓✓</span></div>
+        </div>
+
+        <div class="bot-typing" id="typing5">
+          <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Undian container -->
+      <div class="undian-container" id="undianContainer">
+        <div class="undian-title">🎲 Mengocok Arisan Bulan November 2026...</div>
+        <div class="undian-wheel" id="undianWheel">
+          <div class="wheel-center">🎯</div>
+        </div>
+        <div class="countdown-display" id="countdownDisplay"></div>
+        <div class="undian-status" id="undianStatus">Mempersiapkan undian...</div>
+
+        <div class="winner-announcement" id="winnerAnnouncement">
+          <span class="winner-trophy" role="img" aria-label="Trofi">🏆</span>
+          <div class="winner-name" id="winnerName"></div>
+          <div class="winner-label">Pemenang Arisan RT 03 – November 2026</div>
+          <div class="winner-hash" id="winnerHash"></div>
+        </div>
+      </div>
+
+      <!-- History block -->
+      <div class="history-block" id="historyBlock">
+        <div class="history-title">🔐 Riwayat Undian Tersimpan (Tidak Dapat Diubah)</div>
+        <div class="history-row">
+          <div class="history-num">#1</div>
+          <div class="history-data">
+            <div>Bu Rini Susanti · Oktober 2026</div>
+            <div class="history-hash">hash: a3f8...c921</div>
+          </div>
+        </div>
+        <div class="history-row" id="historyNew" style="display:none;">
+          <div class="history-num">#2</div>
+          <div class="history-data" id="historyNewData"></div>
+        </div>
+      </div>
+
+      <!-- Kocok button area -->
+      <div style="padding: 12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <button class="undian-btn" id="btnKoco" onclick="startUndian()" aria-label="Mulai kocok arisan">
+          🎲 Ketuk untuk Kocok Arisan
+        </button>
+        <div style="font-size:11px; color:rgba(255,255,255,.4);">Simulasikan perintah /kocokarisan dari grup WA</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== BOTTOM NAV BAR ===== -->
+<div class="bottom-bar">
+  <div class="bottom-bar-inner">
+    <button class="btn-prev" id="btnPrev" onclick="prevStep()" aria-label="Layar sebelumnya">← Kembali</button>
+    <span class="step-counter" id="stepCounter">1 / 5</span>
+    <button class="btn-next" id="btnNext" onclick="nextStep()" aria-label="Layar berikutnya">Lanjut →</button>
+  </div>
+</div>
+
+<!-- ===== POPUP: KONFIRMASI LUNAS ===== -->
+<div class="popup-overlay" id="popupLunas" role="dialog" aria-modal="true" aria-label="Konfirmasi Lunas">
+  <div class="popup-card">
+    <span class="popup-icon" role="img" aria-label="Sukses">🎉</span>
+    <div class="popup-title">Konfirmasi Berhasil!</div>
+    <div class="popup-desc">Status pembayaran telah dikonfirmasi. Bot WhatsApp langsung mengirim pesan ke anggota:</div>
+    <div class="popup-wa-msg">
+      <div class="popup-wa-bubble" id="popupWaMsg">
+        ✅ Halo <strong id="popupMemberName"></strong>! Pembayaran arisan Anda <strong>Rp 300.000</strong> telah dikonfirmasi lunas oleh bendahara. Terima kasih! 🙏<br/><br/>
+        Saldo arisan terkumpul: <strong>Rp 1.500.000</strong>
+      </div>
+    </div>
+    <div class="wa-msg-badge" style="margin-bottom:16px;">
+      <span>💬</span> Pesan dikirim via WhatsApp Bot
+    </div>
+    <button class="popup-close" onclick="closePopup('popupLunas')" aria-label="Tutup popup">Mantap! Tutup 👍</button>
+  </div>
+</div>
+
+<!-- ===== POPUP: CEK BUKTI ===== -->
+<div class="popup-overlay" id="popupBukti" role="dialog" aria-modal="true" aria-label="Bukti Transfer">
+  <div class="proof-popup">
+    <div class="proof-popup-title">📸 Bukti Transfer</div>
+    <div class="proof-img-mock">
+      <div class="mock-icon" role="img" aria-label="Struk">🧾</div>
+      <div style="font-size:13px; font-weight:700; color:#166534;">BUKTI TRANSFER</div>
+      <div style="font-size:11px; color:#166534; text-align:center; line-height:1.6;">
+        BRI → BCA<br/>
+        Rp 300.000<br/>
+        Ref: TRX2611100042
+      </div>
+    </div>
+    <div class="proof-detail">
+      <strong id="buktiName">Bu Sari Rahayu</strong>
+      Tanggal: 10 Nov 2026, 14:35 WIB<br/>
+      Bank Asal: BRI · Rekening: 123456****
+    </div>
+    <button class="popup-close" onclick="closePopup('popupBukti')" style="margin-top:16px;" aria-label="Tutup popup">Tutup</button>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+  // ===== STATE =====
+  let currentStep = 1;
+  const TOTAL_STEPS = 5;
+  let screen2Step = 0;
+  let screen3Step = 0;
+  let undianRunning = false;
+
+  // ===== NAVIGATION =====
+  function goToStep(step) {
+    if (step < 1 || step > TOTAL_STEPS) return;
+    document.getElementById('screen-' + currentStep).classList.remove('active');
+    currentStep = step;
+    document.getElementById('screen-' + currentStep).classList.add('active');
+    updateNav();
+    // Auto-init screens
+    if (step === 2 && screen2Step === 0) initScreen2();
+    if (step === 3 && screen3Step === 0) initScreen3();
+    // Scroll top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function nextStep() { goToStep(currentStep + 1); }
+  function prevStep() { goToStep(currentStep - 1); }
+
+  function updateNav() {
+    document.getElementById('stepCounter').textContent = currentStep + ' / ' + TOTAL_STEPS;
+    document.getElementById('btnPrev').disabled = (currentStep === 1);
+    document.getElementById('btnNext').textContent = currentStep === TOTAL_STEPS ? '🏁 Selesai' : 'Lanjut →';
+
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const pill = document.getElementById('pill-' + i);
+      pill.classList.remove('active', 'completed');
+      if (i === currentStep) pill.classList.add('active');
+      else if (i < currentStep) {
+        pill.classList.add('completed');
+        pill.querySelector('.step-num').textContent = '✓';
+      } else {
+        pill.querySelector('.step-num').textContent = i;
+      }
+    }
+  }
+
+  // ===== CHAT HELPERS =====
+  function addMsg(chatId, type, text, name, time) {
+    const chat = document.getElementById(chatId);
+    const msgEl = document.createElement('div');
+    msgEl.className = 'msg ' + type;
+    let nameHtml = '';
+    if (name) nameHtml = `<div class="msg-name" style="${type==='user'?'text-align:right;color:#128C7E;':''}">${name}</div>`;
+    let tickHtml = type === 'user' ? '<span class="tick">✓✓</span>' : '';
+    msgEl.innerHTML = `
+      ${nameHtml}
+      <div class="msg-bubble">${text}</div>
+      <div class="msg-time">${time || '15:00'} ${tickHtml}</div>
+    `;
+    chat.appendChild(msgEl);
+    chat.scrollTop = chat.scrollHeight;
+    return msgEl;
+  }
+
+  function showTyping(chatId, typingId) {
+    const typing = document.getElementById(typingId);
+    typing.classList.add('show');
+    document.getElementById(chatId).scrollTop = 99999;
+  }
+  function hideTyping(typingId) {
+    document.getElementById(typingId).classList.remove('show');
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // ===== SCREEN 2: BENDAHARA - BUAT KELOMPOK =====
+  const screen2Messages = [
+    { type: 'bot', text: '👋 Halo! Saya <strong>SobatRisan Bot</strong>. Saya akan bantu Anda membuat kelompok arisan digital.<br/><br/>Ketik <strong>"Buat Arisan"</strong> atau tekan tombol kirim untuk mulai! 🎉', time: '15:05' },
+    { type: 'user', text: 'Buat Arisan', time: '15:05' },
+    { type: 'bot', text: '✅ Sip! Mari kita buat kelompok arisan Anda.<br/><br/>📌 <strong>Langkah 1/5:</strong> Apa <strong>nama arisan</strong> Anda?<br/><small style="color:#667781;">Contoh: Arisan RT 03, Arisan Keluarga Besar, dll.</small>', time: '15:06' },
+    { type: 'user', text: 'Arisan RT 03 Blok Melati', time: '15:06' },
+    { type: 'bot', text: '📌 <strong>Langkah 2/5:</strong> Berapa <strong>nominal iuran</strong> per orang per bulan?<br/><small style="color:#667781;">Contoh: 300000 (tanpa titik/koma)</small>', time: '15:07' },
+    { type: 'user', text: '300000', time: '15:07' },
+    { type: 'bot', text: '📌 <strong>Langkah 3/5:</strong> Berapa <strong>jumlah anggota</strong>?<br/><small style="color:#667781;">Contoh: 10</small>', time: '15:07' },
+    { type: 'user', text: '6', time: '15:08' },
+    { type: 'bot', text: '📌 <strong>Langkah 4/5:</strong> Tanggal berapa anggota <strong>setor iuran</strong> setiap bulan?<br/><small style="color:#667781;">Contoh: 10</small>', time: '15:08' },
+    { type: 'user', text: '10', time: '15:09' },
+    { type: 'bot', text: '📌 <strong>Langkah 5/5:</strong> Tanggal berapa <strong>kocok arisan</strong> setiap bulan?<br/><small style="color:#667781;">Contoh: 15</small>', time: '15:09' },
+    { type: 'user', text: '15', time: '15:10' },
+    { type: 'bot', text: `🎊 <strong>Kelompok arisan berhasil dibuat!</strong><br/><br/>
+📋 Ringkasan:<br/>
+• Nama: Arisan RT 03 Blok Melati<br/>
+• Iuran: <strong>Rp 300.000/bulan</strong><br/>
+• Anggota: 6 orang<br/>
+• Setor tiap tgl: <strong>10</strong><br/>
+• Kocok tiap tgl: <strong>15</strong><br/><br/>
+Bagikan tautan berikut agar anggota bisa bergabung 👇`, time: '15:10', isLinkCard: true },
+  ];
+
+  async function initScreen2() {
+    const chat = document.getElementById('chat2');
+    // Add typing indicator
+    const typingEl = document.createElement('div');
+    typingEl.className = 'bot-typing show';
+    typingEl.id = 'typing2';
+    typingEl.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    chat.appendChild(typingEl);
+
+    await sleep(900);
+    typingEl.remove();
+    addMsg('chat2', 'bot', screen2Messages[0].text, null, screen2Messages[0].time);
+    screen2Step = 1;
+    setInput2('Buat Arisan');
+  }
+
+  function setInput2(val) {
+    document.getElementById('input2').value = val;
+  }
+
+  async function screen2Next() {
+    if (screen2Step >= screen2Messages.length) return;
+
+    const idx = screen2Step;
+    const msgData = screen2Messages[idx];
+    screen2Step++;
+
+    if (msgData.type === 'user') {
+      addMsg('chat2', 'user', msgData.text, 'Bu Ketua (Bendahara)', msgData.time);
+      document.getElementById('input2').value = '';
+
+      // Show bot typing
+      const chat = document.getElementById('chat2');
+      const typingEl = document.createElement('div');
+      typingEl.className = 'bot-typing show';
+      typingEl.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+      chat.appendChild(typingEl);
+      chat.scrollTop = 99999;
+
+      await sleep(1000);
+      typingEl.remove();
+
+      if (screen2Step < screen2Messages.length) {
+        const nextMsg = screen2Messages[screen2Step];
+        if (nextMsg.type === 'bot') {
+          screen2Step++;
+          addBotMsg2(nextMsg);
+
+          // Setup next user input
+          if (screen2Step < screen2Messages.length && screen2Messages[screen2Step].type === 'user') {
+            setInput2(screen2Messages[screen2Step].text);
+          }
+        }
+      }
+    }
+  }
+
+  function addBotMsg2(msgData) {
+    const chat = document.getElementById('chat2');
+    const msgEl = document.createElement('div');
+    msgEl.className = 'msg bot';
+    let html = `<div class="msg-bubble">${msgData.text}</div>`;
+    if (msgData.isLinkCard) {
+      html += `<div class="wa-link-card">
+        <div class="wa-link-card-top">
+          <div class="wa-link-card-icon">📋</div>
+          <div>
+            <div class="wa-link-card-title">Dashboard Arisan RT 03</div>
+            <div class="wa-link-card-subtitle">Klik untuk lihat & kelola anggota</div>
+          </div>
+        </div>
+        <div class="wa-link-card-url">https://sobatrisan.id/d/rt03-melati-2026</div>
+      </div>`;
+    }
+    html += `<div class="msg-time">${msgData.time || '15:10'}</div>`;
+    msgEl.innerHTML = html;
+    chat.appendChild(msgEl);
+    chat.scrollTop = 99999;
+  }
+
+  // ===== SCREEN 3: ANGGOTA - BAYAR & UPLOAD =====
+  let screen3Phase = 0;
+
+  async function initScreen3() {
+    screen3Phase = 0;
+    // Phase 0: bot sends reminder + opt-in
+    const chat = document.getElementById('chat3');
+    const typingEl = document.createElement('div');
+    typingEl.className = 'bot-typing show';
+    typingEl.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    chat.appendChild(typingEl);
+    chat.scrollTop = 99999;
+    await sleep(900);
+    typingEl.remove();
+
+    addMsg('chat3', 'bot', `📢 Halo <strong>Bu Sari</strong>! 👋<br/><br/>
+Anda menerima undangan bergabung ke<br/>
+<strong>Arisan RT 03 Blok Melati</strong><br/><br/>
+Tekan tombol di bawah untuk bergabung dan menerima pengingat iuran otomatis.`, null, '15:12');
+
+    // Add opt-in button
+    const qrDiv = document.createElement('div');
+    qrDiv.className = 'quick-replies';
+    qrDiv.style.padding = '0 12px 8px';
+    qrDiv.innerHTML = `<button class="qr-chip" onclick="screen3Phase1()" id="btnOptIn">✅ Setuju Bergabung</button>`;
+    chat.appendChild(qrDiv);
+    chat.scrollTop = 99999;
+    screen3Phase = 1;
+    document.getElementById('send3').onclick = screen3Next;
+    document.getElementById('input3').placeholder = 'Tekan "Setuju Bergabung"...';
+  }
+
+  async function screen3Phase1() {
+    if (screen3Phase !== 1) return;
+    screen3Phase = 2;
+    document.getElementById('btnOptIn').remove();
+    const chat = document.getElementById('chat3');
+
+    addMsg('chat3', 'user', '✅ Setuju Bergabung', 'Bu Sari', '15:13');
+    const typingEl = document.createElement('div');
+    typingEl.className = 'bot-typing show';
+    typingEl.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    chat.appendChild(typingEl); chat.scrollTop = 99999;
+    await sleep(1000); typingEl.remove();
+
+    addMsg('chat3', 'bot', `🎉 Selamat bergabung, <strong>Bu Sari</strong>!<br/><br/>
+Anda resmi menjadi anggota <strong>Arisan RT 03</strong>.<br/>
+Iuran: <strong>Rp 300.000/bulan</strong><br/>
+Jatuh tempo: tanggal <strong>10</strong> setiap bulan.<br/><br/>
+Anda akan mendapat pengingat otomatis H-1 & H-0 jatuh tempo. 🔔`, null, '15:13');
+
+    // Simulate fast-forward: auto reminder
+    await sleep(1500);
+    const typingEl2 = document.createElement('div');
+    typingEl2.className = 'bot-typing show';
+    typingEl2.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    chat.appendChild(typingEl2); chat.scrollTop = 99999;
+    await sleep(1200); typingEl2.remove();
+
+    addMsg('chat3', 'bot', `⏰ <em>[Simulasi Waktu Dipercepat – 1 Hari Kemudian]</em><br/><br/>
+<strong>Bu Sari</strong>, iuran Arisan RT 03 jatuh tempo <strong>besok (10 Nov 2026)</strong>!<br/><br/>
+Nominal: <strong>Rp 300.000</strong><br/>
+Rekening BRI: <strong>1234-5678-9012</strong><br/>
+a.n. <em>Bendahara RT 03</em><br/><br/>
+Setelah transfer, kirim foto bukti di sini ya 📸`, null, '15:14 (Besok: 15:00)');
+
+    // Add upload button
+    const uploadDiv = document.createElement('div');
+    uploadDiv.style.cssText = 'padding: 8px 12px;';
+    uploadDiv.innerHTML = `<button class="upload-trigger-btn" onclick="screen3Phase2()" id="btnUpload">📸 Kirim Bukti Transfer</button>`;
+    chat.appendChild(uploadDiv);
+    chat.scrollTop = 99999;
+    document.getElementById('input3').placeholder = 'Tekan "Kirim Bukti Transfer"...';
+  }
+
+  async function screen3Phase2() {
+    if (screen3Phase !== 2) return;
+    screen3Phase = 3;
+    document.getElementById('btnUpload').closest('div').remove();
+    const chat = document.getElementById('chat3');
+
+    // User sends photo
+    const photoMsg = document.createElement('div');
+    photoMsg.className = 'msg user';
+    photoMsg.innerHTML = `
+      <div class="msg-name" style="text-align:right; color:#128C7E;">Bu Sari</div>
+      <div class="photo-bubble">
+        <div class="photo-bubble-img">
+          <div class="receipt-icon" role="img" aria-label="Struk">🧾</div>
+          <div class="receipt-label">Bukti Transfer BRI</div>
+          <div style="font-size:9px; color:#166534; margin-top:2px;">Rp 300.000</div>
+        </div>
+        <div class="photo-bubble-caption">Ini bukti transfernya Bu Ketua 🙏</div>
+      </div>
+      <div class="msg-time">09:42 <span class="tick">✓✓</span></div>
+    `;
+    chat.appendChild(photoMsg); chat.scrollTop = 99999;
+
+    const typingEl = document.createElement('div');
+    typingEl.className = 'bot-typing show';
+    typingEl.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    chat.appendChild(typingEl); chat.scrollTop = 99999;
+    await sleep(1200); typingEl.remove();
+
+    addMsg('chat3', 'bot', `📥 Bukti transfer diterima!<br/><br/>
+🕐 <strong>Status: Menunggu Konfirmasi Bendahara</strong><br/><br/>
+Kami akan notifikasi Anda segera setelah bendahara mengkonfirmasi pembayaran. Terima kasih, Bu Sari! 🙏`, null, '09:43');
+    document.getElementById('input3').placeholder = 'Lanjut ke Dashboard Bendahara...';
+  }
+
+  async function screen3Next() {
+    if (screen3Phase === 1) { screen3Phase1(); }
+    else if (screen3Phase === 2) { screen3Phase2(); }
+  }
+
+  // ===== SCREEN 4: DASHBOARD =====
+  let lunasCount = 3;
+  let tunggguCount = 2;
+
+  function confirmLunas(id, name) {
+    const btn = document.getElementById('btn-lunas-' + id);
+    const card = document.getElementById('card-' + id);
+    const actionsDiv = document.getElementById('actions-' + id);
+
+    btn.disabled = true;
+    btn.textContent = '⏳';
+
+    setTimeout(() => {
+      // Replace actions with status badge
+      actionsDiv.innerHTML = '<span class="member-status status-confirmed">✅ Lunas</span>';
+      card.style.borderColor = 'rgba(37,211,102,.4)';
+
+      // Update stats
+      lunasCount++;
+      tunggguCount--;
+      document.getElementById('statLunas').textContent = lunasCount;
+      document.getElementById('statMenunggu').textContent = tunggguCount;
+
+      // Show popup
+      document.getElementById('popupMemberName').textContent = name;
+      showPopup('popupLunas');
+
+      // Trigger confetti
+      createConfetti();
+    }, 800);
+  }
+
+  function showProofPopup(name) {
+    document.getElementById('buktiName').textContent = name;
+    showPopup('popupBukti');
+  }
+
+  function showPopup(id) {
+    document.getElementById(id).classList.add('show');
+  }
+  function closePopup(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  // ===== SCREEN 5: UNDIAN =====
+  async function startUndian() {
+    if (undianRunning) return;
+    undianRunning = true;
+    const btn = document.getElementById('btnKoco');
+    btn.disabled = true;
+    btn.style.opacity = '.5';
+
+    const chat = document.getElementById('chat5');
+    const kocoCmd = document.getElementById('kocoCmd');
+    const typing5 = document.getElementById('typing5');
+
+    // Show user command
+    kocoCmd.style.display = 'flex';
+    chat.scrollTop = 99999;
+
+    await sleep(600);
+    typing5.classList.add('show');
+    chat.scrollTop = 99999;
+    await sleep(1200);
+    typing5.classList.remove('show');
+
+    // Show undian container
+    const container = document.getElementById('undianContainer');
+    container.classList.add('show');
+
+    const wheel = document.getElementById('undianWheel');
+    const countdownDisplay = document.getElementById('countdownDisplay');
+    const statusEl = document.getElementById('undianStatus');
+
+    // Spin wheel
+    wheel.classList.add('spinning');
+    statusEl.textContent = '🔄 Mengocok arisan bulan ini...';
+    await sleep(1500);
+
+    // Countdown
+    statusEl.textContent = '📋 Memilih dari anggota yang lunas...';
+    for (let i = 3; i >= 1; i--) {
+      countdownDisplay.style.display = 'block';
+      countdownDisplay.textContent = i;
+      countdownDisplay.style.animation = 'none';
+      countdownDisplay.offsetHeight;
+      countdownDisplay.style.animation = 'winnerAppear .3s both';
+      await sleep(900);
+    }
+
+    // Stop wheel
+    wheel.classList.remove('spinning');
+    countdownDisplay.style.display = 'none';
+
+    // Pick winner
+    const members = ['Bu Sari Rahayu', 'Bu Rini Susanti', 'Bu Ani Kartika', 'Bu Dewi Puspita', 'Pak Budi Santoso'];
+    const winner = members[Math.floor(Math.random() * members.length)];
+    const hash = generateHash(winner + Date.now());
+
+    // Show winner
+    document.getElementById('winnerName').textContent = winner;
+    document.getElementById('winnerHash').textContent = '🔐 Hash Verifikasi: ' + hash;
+    document.getElementById('winnerAnnouncement').classList.add('show');
+    statusEl.textContent = '';
+
+    // Update history
+    const historyNew = document.getElementById('historyNew');
+    document.getElementById('historyNewData').innerHTML = `
+      <div>${winner} · November 2026</div>
+      <div class="history-hash">hash: ${hash.slice(0,8)}...${hash.slice(-4)}</div>
+    `;
+    historyNew.style.display = 'flex';
+
+    // Show history block
+    document.getElementById('historyBlock').classList.add('show');
+
+    // Add winner msg to chat
+    await sleep(1000);
+    addMsg('chat5', 'bot', `🏆 <strong>HASIL UNDIAN ARISAN RT 03</strong><br/>
+November 2026<br/><br/>
+🎉 <strong>Pemenang: ${winner}</strong><br/><br/>
+Selamat Bu/Pak! Silakan hubungi bendahara untuk penjadwalan penyerahan uang arisan.<br/><br/>
+🔐 <em>ID Undian: ${hash.slice(0,12)}...</em><br/>
+<small>Riwayat tersimpan permanen & tidak dapat diubah.</small>`, 'SobatRisan Bot 🤖', '15:31');
+
+    createConfetti();
+    btn.textContent = '🔁 Ulangi Undian';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.onclick = () => { undianRunning = false; resetUndian(); };
+  }
+
+  function resetUndian() {
+    document.getElementById('undianContainer').classList.remove('show');
+    document.getElementById('historyBlock').classList.remove('show');
+    document.getElementById('winnerAnnouncement').classList.remove('show');
+    document.getElementById('kocoCmd').style.display = 'none';
+    document.getElementById('btnKoco').textContent = '🎲 Ketuk untuk Kocok Arisan';
+    document.getElementById('btnKoco').onclick = startUndian;
+    // Remove any added winner messages
+    const chat = document.getElementById('chat5');
+    const msgs = chat.querySelectorAll('.msg');
+    if (msgs.length > 5) {
+      for (let i = 5; i < msgs.length; i++) msgs[i].remove();
+    }
+  }
+
+  function generateHash(str) {
+    let hash = 0;
+    const ts = Date.now().toString(16);
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0') + ts;
+  }
+
+  // ===== CONFETTI =====
+  function createConfetti() {
+    const colors = ['#25D366', '#128C7E', '#FCD34D', '#F59E0B', '#34D399', '#fff'];
+    for (let i = 0; i < 60; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `
+        left: ${Math.random() * 100}vw;
+        top: 0;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        width: ${6 + Math.random() * 8}px;
+        height: ${6 + Math.random() * 8}px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        animation-duration: ${1.5 + Math.random() * 2}s;
+        animation-delay: ${Math.random() * .6}s;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+  }
+
+  // ===== CLOSE POPUP ON OVERLAY CLICK =====
+  document.querySelectorAll('.popup-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  });
+
+  // ===== INIT =====
+  updateNav();
+  initScreen2();
+</script>
+</body>
+</html>
